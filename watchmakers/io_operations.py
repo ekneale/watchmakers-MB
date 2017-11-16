@@ -182,31 +182,56 @@ def jobString(percentage,j,runs,models,arguments):
     outF         = arguments["--ntupleout"]
     superNova    = arguments["--supernovaFormat"]
 
-
-    line1 = """#!/bin/sh
-#MSUB -N WM_%s_%s_%d_%s    #name of job
-#MSUB -A adg         # sets bank account
-#MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
-#MSUB -q pbatch         #pool
-#MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
-#MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
-#MSUB -d %s  # directory to run from
-#MSUB -V
-#MSUB                     # no more psub commands
-
-source %s/bin/thisroot.sh
-source %s/../../../bin/geant4.sh
-source %s/geant4make.sh
-source %s/env.sh
-source %s/env_wm.sh
-export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1\n
-""" %(percentage,location,runs,additionalMacStr,\
-directory,case,additionalMacStr,percentage,location,runs,\
-directory,case,additionalMacStr,percentage,location,runs,\
-directory,\
-rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
     if sheffield:
-        line1 += 'export SHEFFIELD=1\n'
+
+        line1 = """#!/bin/sh
+    #MSUB -N WM_%s_%s_%d_%s    #name of job
+    #MSUB -A adg         # sets bank account
+    #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+    #MSUB -q pbatch         #pool
+    #MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
+    #MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
+    #MSUB -d %s  # directory to run from
+    #MSUB -V
+    #MSUB                     # no more psub commands
+
+    source %s/bin/thisroot.sh
+    source /usr/local/gcc49/setup.sh
+    source /usr/local/geant4/setup.sh 10.3
+    source %s/geant4make.sh
+    source %s/env.sh
+    source %s/env_wm.sh
+    export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1
+    export SHEFFIELD=1\n
+    """ %(percentage,location,runs,additionalMacStr,\
+    directory,case,additionalMacStr,percentage,location,runs,\
+    directory,case,additionalMacStr,percentage,location,runs,\
+    directory,\
+    rootDir,g4Dir,ratDir,watchmakersDir)
+
+    else:
+        line1 = """#!/bin/sh
+    #MSUB -N WM_%s_%s_%d_%s    #name of job
+    #MSUB -A adg         # sets bank account
+    #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+    #MSUB -q pbatch         #pool
+    #MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
+    #MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
+    #MSUB -d %s  # directory to run from
+    #MSUB -V
+    #MSUB                     # no more psub commands
+
+    source %s/bin/thisroot.sh
+    source %s/../../../bin/geant4.sh
+    source %s/geant4make.sh
+    source %s/env.sh
+    source %s/env_wm.sh
+    export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1\n
+    """ %(percentage,location,runs,additionalMacStr,\
+    directory,case,additionalMacStr,percentage,location,runs,\
+    directory,case,additionalMacStr,percentage,location,runs,\
+    directory,\
+    rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
 
     for mods in models:
         if location == "FN":
@@ -265,6 +290,13 @@ def generateJobs(N,arguments):
     d,iso,loc,coverage,coveragePCT = loadSimulationParameters()
     case = arguments["-j"]
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
+
+    try:
+        sheffield   = os.environ['SHEFFIELD']
+        # print 'Running on sheffield cluster'
+    except:
+        # print 'Not running on sheffield cluster'
+        sheffield =  0
 
     '''Find wheter the jobs folder exist: if not create, if yes clean and recreate'''
 
@@ -350,13 +382,18 @@ def generateJobs(N,arguments):
                 line,case = jobString(cover,j,index,models,arguments)
                 stringFile = "%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh" %(job,loc[j],cover,cover,\
                                                             "%s"%(iso[int(j)]),loc[j],index,case)
-                if index == 0:
-                    job_list+= '(msub ' + stringFile +') || ./'+ stringFile + '\n'
-
-                outfile = open(stringFile,"wb")
-                outfile.writelines(line)
-                if index < N-1:
-                    stringFile1 = "(msub %s/%s/%s/jobs%s_%s_%s_%d_case%d.sh || ./%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh)" %(job,loc[j],cover,cover,\
+		if sheffield:
+                    job_list+= 'condor_qsub -l nodes=1:ppn=1 ' + stringFile + '\n'
+                    outfile = open(stringFile,"wb")
+                    outfile.writelines(line)
+                else:
+		    if index == 0:
+                        job_list+= '(msub ' + stringFile +') || ./'+ stringFile + '\n'
+                    outfile = open(stringFile,"wb")
+                    outfile.writelines(line)
+                    
+                    if index < N-1:
+                        stringFile1 = "(msub %s/%s/%s/jobs%s_%s_%s_%d_case%d.sh || ./%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh)" %(job,loc[j],cover,cover,\
                                                                                                  "%s"%(iso[int(j)]),loc[j],index+1,case,job,loc[j],cover,cover,\
                                                                                                  "%s"%(iso[int(j)]),loc[j],index+1,case)
                     outfile.writelines(stringFile1)
