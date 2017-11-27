@@ -18,6 +18,7 @@ from numpy import array as npa
 from numpy import power,absolute,logical_and,column_stack,zeros,empty,append,\
 sqrt,absolute,recarray
 
+
 from math import pow,exp,log10,pi
 gStyle.SetOptStat(1112211)
 
@@ -131,7 +132,6 @@ except ImportError:
 gSystem.Load("$RATROOT/lib/libRATEvent")
 gSystem.AddIncludePath(" -I$RATROOT/include")
 
-
 gROOT.LoadMacro("$WATCHENV/watchmakers/goldenFileExtractor.C")
 from ROOT import goldenFileExtractor
 
@@ -180,8 +180,34 @@ def loadSimulationParameters():
 
     return d, iso,loc,coverage,coveragePCT
 
+def loadPMTInfo():
+    import subprocess
+    from io_operations import testEnabledCondition
+    conditions = testEnabledCondition(arguments)
+    cond = conditions[2]
+    cmd = ["""grep 'generated PMTs' log_case*%s/boulby/**pct/rat.**pct_boulby_S_0.log"""%(cond)]
+    a =  subprocess.check_output(cmd,shell=True)
+    b = a.splitlines()
+    c = []
+    for _b in b:
+        c.append(float(_b.split()[3]))
+
+    cmd = ["""grep 'actual photocathode coverage' log_case*%s/boulby/**pct/rat.**pct_boulby_S_0.log"""%(cond)]
+    a =  subprocess.check_output(cmd,shell=True)
+    b = a.splitlines()
+    d = []
+    for _b in b:
+        d.append(float(_b.split()[4])*100.)
+
+    print '\nExtracting from log files number of PMTs and photocoverage'
+    print cmd
+    print 'Number of PMTs      ', c
+    print 'Actual photocoverage', d
+    return c,d
+
 def loadAnalysisParameters(timeScale='day'):
 
+    pmt = loadPMTInfo()
 
     # Default units are in sec. Conversion factor are below
     timeSec     = 1.0/365./24./3600.
@@ -485,11 +511,10 @@ def loadAnalysisParameters(timeScale='day'):
     for index,ele in enumerate(_proc):
         dAct["%s_%s%s"%(ele,_loca[index],_site[index])] = arr[index]*timeS
 
-
-    coveNumber    = {'10pct':1432.,   '15pct':2162., '20pct':2824.,  \
-    '25pct':3558.,  '30pct':4196., '35pct':4985.,  '40pct':5684.}
-    covePCT       = {'10pct':9.86037, '15pct':14.887,'20pct':19.4453,\
-    '25pct':24.994,'30pct':28.8925,'35pct':34.3254,'40pct':39.1385}
+    coveNumber    = {'10pct':pmt[0][0],   '15pct':pmt[0][1], '20pct':pmt[0][2],  \
+    '25pct':pmt[0][3],  '30pct':pmt[0][4], '35pct':pmt[0][5],  '40pct':pmt[0][6]}
+    covePCT       = {'10pct':pmt[1][0], '15pct':pmt[1][1],'20pct':pmt[1][2],\
+    '25pct':pmt[1][3],'30pct':pmt[1][4],'35pct':pmt[1][5],'40pct':pmt[1][6]}
 
 
     return inta,proc,loca,acc,arr,Activity,br,site,timeS,\

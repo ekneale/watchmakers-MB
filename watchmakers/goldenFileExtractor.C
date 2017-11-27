@@ -19,7 +19,12 @@ TRandom3 randNum;
 
 //#include <libRATEvent.h>
 
-int goldenFileExtractor(const char *file, const char *outfile = "null", double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1, double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0, double fidBound = 5.4, double pmtBound = 6.4, double tankBound = 8.0000) {
+int goldenFileExtractor(const char *file, const char *outfile = "null",
+double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1,
+double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0,
+double fidBoundR = 5.42, double fidBoundZ = 5.42,
+double pmtBoundR = 6.4,double pmtBoundZ = 6.4,
+double tankBoundR = 8.0000,double tankBoundZ = 8.0000) {
 
     // Define the incoming out outgoing Trees
     TFile *f = new TFile(file);
@@ -127,7 +132,7 @@ int goldenFileExtractor(const char *file, const char *outfile = "null", double n
         r_t = sqrt(pow(prim->GetPosition().X(),2)+ pow(prim->GetPosition().Y(),2))/1000.;
         z_t = prim->GetPosition().Z()/1000.;
 
-        FindVolume(r_t,z_t,FV_t,GSV_t,IV_t,EV_t,OV_t,fidBound,pmtBound,tankBound);
+        FindVolume(r_t,z_t,FV_t,GSV_t,IV_t,EV_t,OV_t,fidBoundR,fidBoundZ,pmtBoundR,pmtBoundZ,tankBoundR,tankBoundZ);
 
         //Find out how many subevents:
         subevents                   = rds->GetEVCount();
@@ -193,7 +198,7 @@ int goldenFileExtractor(const char *file, const char *outfile = "null", double n
                     cnt                  +=1;
                     cnt_all              +=1;
 
-                    FindVolume(r,z,FV,GSV,IV,EV,OV,fidBound,pmtBound,tankBound);
+                    FindVolume(r,z,FV,GSV,IV,EV,OV,fidBoundR,fidBoundZ,pmtBoundR,pmtBoundZ,tankBoundR,tankBoundZ);
                     if (FV==1) {
                         tot_FV+=1;
                         consecutive_FV+=1;
@@ -372,18 +377,18 @@ int goldenFileExtractor(const char *file, const char *outfile = "null", double n
     return 0;
 }
 
-void FindVolume(Double_t r_t,Double_t z_t,Int_t &FV_t,Int_t &GSV_t,Int_t &IV_t,Int_t &EV_t,Int_t &OV_t,double fidBound, double pmtBound, double tankBound){
+void FindVolume(Double_t r_t,Double_t z_t,Int_t &FV_t,Int_t &GSV_t,Int_t &IV_t,Int_t &EV_t,Int_t &OV_t,double fidBoundR,fidBoundZ,double pmtBoundR,double pmtBoundZ, double tankBoundR, double tankBoundZ){
 
     FV_t = GSV_t = IV_t = EV_t = OV_t = 0;
-    if (r_t < fidBound && fabs(z_t) < fidBound) {
+    if (r_t < fidBoundR && fabs(z_t) < fidBoundZ) {
         FV_t =1;
         IV_t =1;
         EV_t =1;
-    }else if(!(r_t < fidBound && fabs(z_t) < fidBound) && (r_t < pmtBound && fabs(z_t) < pmtBound)){
+    }else if(!(r_t < fidBoundR && fabs(z_t) < fidBoundZ) && (r_t < pmtBoundR && fabs(z_t) < pmtBoundZ)){
         GSV_t =1;
         IV_t  =1;
         EV_t =1;
-    }else if(!(r_t < pmtBound && fabs(z_t) < pmtBound) && (r_t < tankBound && fabs(z_t) < tankBound)){
+    }else if(!(r_t < pmtBoundR && fabs(z_t) < pmtBoundZ) && (r_t < tankBoundR && fabs(z_t) < tankBoundZ)){
         OV_t =1;
         EV_t =1;
     }else{

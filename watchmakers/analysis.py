@@ -344,12 +344,11 @@ def extractHistogramWitCorrectRate():
     #fiducialVolume          = float(arguments["--fv"])
     fiducialHalfHeight= float(arguments['--halfHeight'])- float(arguments['--steelThick'])- float(arguments['--shieldThick'])- float(arguments['--fidThick'])
     fiducialRadius    = float(arguments['--tankRadius'])- float(arguments['--steelThick'])- float(arguments['--shieldThick'])- float(arguments['--fidThick'])
-    print "Second change in analysis.py",fiducialHalfHeight,fiducialRadius
 
     #pmtDist                 = float(arguments["--psup"])
     pmtDist  = float(arguments["--tankRadius"])-float(arguments['--steelThick'])-float(arguments["--shieldThick"])
     pmtDistZ = float(arguments["--halfHeight"])-float(arguments['--steelThick'])-float(arguments["--shieldThick"])
-    print "Second change in analysis.py",fiducialHalfHeight,fiducialRadius,pmtDist,pmtDistZ
+    print "Values of Fid. Vol. (HalfHeight,Radius) and PMT placement (HalfHeight,Radius) ",fiducialHalfHeight,fiducialRadius,pmtDist,pmtDistZ, ' mm'
 
     timeScale               = arguments["--timeScale"]
     inFilePrefix            = arguments["--ft"]
@@ -364,7 +363,13 @@ def extractHistogramWitCorrectRate():
     timeS       = parameters[8]
     timeRedux     = float(arguments["-t"]) # cut is in microsecond
     timeRedux     *=1e-6/timeS
-    print "The rates of events per %s are"%(timeScale),rates
+    print "\nThe raw rate of events per %s are"%(timeScale)
+    _rates = sorted(rates,key=rates.__getitem__, reverse=True)
+    for _r in _rates:
+        if 'PMT' in _r:
+            print "%25s %5.3e per %s per PMT"%(_r,rates[_r],timeScale)
+        else:
+            print "%25s %5.3e per %s"%(_r,rates[_r],timeScale)
     print "The cuts are : time window %4.3e %s" %(timeRedux,timeScale)
     #    print "Fiducial volume is ", fiducialVolume
     #Read-in file
@@ -582,7 +587,7 @@ def extractHistogramWitCorrectRate():
                     trueFVstring,posGood,n9Good)
                     soCond = "!%s &&  %s && %s && %s" %(recoFVstring,\
                     trueFVstring,posGood,n9Good)
-                    print eiCond,siCond
+                    # print eiCond,siCond
                     # Add additional condition for correlated MC
                     if not boolSUPERNOVA_FORMAT:
                         multCond  = "&& detected_ev==1 && detected_ev_tot>=2"
