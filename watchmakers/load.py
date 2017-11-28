@@ -36,7 +36,7 @@ except:
 
 defaultValues  = [1,3,2500,2805.,'merged_ntuple_watchman',\
 'merged_ntuple_watchman','null', 'processed_watchman.root',\
-10.,2.0, 100.0, 9, 0.65,0.1,5.42,6.4,8.0,8000.0,8000.0,1600.0,1.5875,1000.,\
+10.,2.0, 100.0, 9, 0.65,0.1,8026.35,8026.35,1600.0,6.35,1000.,\
 'day','boulby', 1.0, 0.043, 0.133]
 
 docstring = """
@@ -77,10 +77,6 @@ docstring = """
 
     --customJob         Custom job for photocoverage 02-2017
 
-    --fv=<fidV>         IGNORE Fiducial Volome [Default: %f]
-    --psup=<psupV>      IGNORE Distance to PMT support, assuming right cylinder [Default: %f]
-    --tankDis=<tankV>   IGNORE Distance to tank wall, assuming right cylinder [Default: %f]
-
     --tankRadius=<TR>   Total radius of tank (mm) [Default: %f]
     --halfHeight=<HH>   Half height of tank (mm) [Default: %f]
     --shieldThick=<ST>  Steel->PMT distance (mm) [Default: %f]
@@ -118,8 +114,7 @@ docstring = """
            defaultValues[9],defaultValues[10],defaultValues[11],defaultValues[12],\
            defaultValues[13],defaultValues[14],defaultValues[15],defaultValues[16],\
            defaultValues[17],defaultValues[18],defaultValues[19],defaultValues[20],\
-           defaultValues[21],defaultValues[22],defaultValues[23],defaultValues[24],\
-           defaultValues[25],defaultValues[26])
+           defaultValues[21],defaultValues[22],defaultValues[23])
 
 try:
     import docopt
@@ -131,6 +126,7 @@ except ImportError:
 
 gSystem.Load("$RATROOT/lib/libRATEvent")
 gSystem.AddIncludePath(" -I$RATROOT/include")
+
 
 gROOT.LoadMacro("$WATCHENV/watchmakers/goldenFileExtractor.C")
 from ROOT import goldenFileExtractor
@@ -205,6 +201,7 @@ def loadPMTInfo():
     print 'Actual photocoverage', d
     return c,d
 
+
 def loadAnalysisParameters(timeScale='day'):
 
     pmt = loadPMTInfo()
@@ -222,8 +219,8 @@ def loadAnalysisParameters(timeScale='day'):
     if timeScale == 'year':
         timeS   = 365.0*24.0*3600.
 
-    #Mass in kilograms
-    mass = 2.0
+    #PMT mass in kilograms
+    mass = 1.4 # from Hamamatsu tech details
 
     #Evaluate FV to total detector volume ratio
     nKiloTons   = 3.22
@@ -236,7 +233,7 @@ def loadAnalysisParameters(timeScale='day'):
     fidHeight = float(arguments['--halfHeight'])-float(arguments['--steelThick'])-float(arguments['--shieldThick'])-float(arguments['--fidThick'])
 
     tankRadius  = float(arguments["--tankRadius"])-float(arguments['--steelThick'])
-    tankHeight  = float(arguments["--tankRadius"])-float(arguments['--steelThick'])
+    tankHeight  = float(arguments["--halfHeight"])-float(arguments['--steelThick'])
 
     fidVolume  = pow(fidRadius,2)*(2.*fidHeight)
     tankVolume = pow(tankRadius,2)*(2.*tankHeight)
@@ -247,7 +244,7 @@ def loadAnalysisParameters(timeScale='day'):
     #Rock mass
     # Original Estimate
     # volumeR         = (2.*22.5*23.8*1.0+2.*17*23.8*1.0+2.*22.5*17.*1.0)
-    volumeR         = power(22.,3) - power(20.,3) # Rock cavern (22m x 22m x 22m) - (20m x 20m x 20m)
+    volumeR         = power(2*float(arguments["--tankRadius"])+6,2)*(2*float(arguments["--halfHeight"])+6) - power(2*float(arguments["--tankRadius"])+4,2)*(2*float(arguments["--halfHeight"])+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
     density         = 2.39 #from McGrath
     rockMass        = volumeR*power(100.,3)*density
     #Mass of rock evalyated
@@ -511,6 +508,7 @@ def loadAnalysisParameters(timeScale='day'):
     for index,ele in enumerate(_proc):
         dAct["%s_%s%s"%(ele,_loca[index],_site[index])] = arr[index]*timeS
 
+
     coveNumber    = {'10pct':pmt[0][0],   '15pct':pmt[0][1], '20pct':pmt[0][2],  \
     '25pct':pmt[0][3],  '30pct':pmt[0][4], '35pct':pmt[0][5],  '40pct':pmt[0][6]}
     covePCT       = {'10pct':pmt[1][0], '15pct':pmt[1][1],'20pct':pmt[1][2],\
@@ -519,3 +517,4 @@ def loadAnalysisParameters(timeScale='day'):
 
     return inta,proc,loca,acc,arr,Activity,br,site,timeS,\
     boulbyIBDRate*FVkTonRatio,mass,dAct,coveNumber,covePCT
+
