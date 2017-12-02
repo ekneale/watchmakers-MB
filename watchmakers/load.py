@@ -244,7 +244,7 @@ def loadAnalysisParameters(timeScale='day'):
     #Rock mass
     # Original Estimate
     # volumeR         = (2.*22.5*23.8*1.0+2.*17*23.8*1.0+2.*22.5*17.*1.0)
-    volumeR         = power(2*float(arguments["--tankRadius"]/1000.)+6,2)*(2*float(arguments["--halfHeight"]/1000.)+6) - power(2*float(arguments["--tankRadius"]/1000.)+4,2)*(2*float(arguments["--halfHeight"]/1000.)+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
+    volumeR         = power(2*float(arguments["--tankRadius"])/1000.+6,2)*(2*float(arguments["--halfHeight"])/1000.+6) - power(2*float(arguments["--tankRadius"])/1000.+4,2)*(2*float(arguments["--halfHeight"])/1000.+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
     density         = 2.39 #from McGrath
     rockMass        = volumeR*power(100.,3)*density
     #Mass of rock evalyated
