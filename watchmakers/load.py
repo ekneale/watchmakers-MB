@@ -106,7 +106,7 @@ docstring = """
     --detectMedia=<_dM>  Detector media (doped_water,...)
     --collectionEff=<CE> Collection efficiency (e.g.: 0.85,0.67,0.475)
 
-    --pmtModel=<_PMTM>   PMT Model (r7081pe)
+    --pmtModel=<_PMTM>   PMT Model (r7081pe for 10inch or r11780_hqe for 12inch)
     --photocath =<_PC>  PMT photocathode (R7081HQE)
 
     """ % (defaultValues[0],defaultValues[1],defaultValues[2],defaultValues[3],defaultValues[4],\
@@ -195,10 +195,10 @@ def loadPMTInfo():
     for _b in b:
         d.append(float(_b.split()[4])*100.)
 
-    print '\nExtracting from log files number of PMTs and photocoverage'
-    print cmd
-    print 'Number of PMTs      ', c
-    print 'Actual photocoverage', d
+    # print '\nExtracting from log files number of PMTs and photocoverage'
+    # print cmd
+    # print 'Number of PMTs      ', c
+    # print 'Actual photocoverage', d
     return c,d
 
 
@@ -244,7 +244,7 @@ def loadAnalysisParameters(timeScale='day'):
     #Rock mass
     # Original Estimate
     # volumeR         = (2.*22.5*23.8*1.0+2.*17*23.8*1.0+2.*22.5*17.*1.0)
-    volumeR         = power(2*float(arguments["--tankRadius"])+6,2)*(2*float(arguments["--halfHeight"])+6) - power(2*float(arguments["--tankRadius"])+4,2)*(2*float(arguments["--halfHeight"])+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
+    volumeR         = power(2*float(arguments["--tankRadius"]/1000.)+6,2)*(2*float(arguments["--halfHeight"]/1000.)+6) - power(2*float(arguments["--tankRadius"]/1000.)+4,2)*(2*float(arguments["--halfHeight"]/1000.)+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
     density         = 2.39 #from McGrath
     rockMass        = volumeR*power(100.,3)*density
     #Mass of rock evalyated
@@ -514,7 +514,19 @@ def loadAnalysisParameters(timeScale='day'):
     covePCT       = {'10pct':pmt[1][0], '15pct':pmt[1][1],'20pct':pmt[1][2],\
     '25pct':pmt[1][3],'30pct':pmt[1][4],'35pct':pmt[1][5],'40pct':pmt[1][6]}
 
+    pctTubes   = {"%s"%(pmt[1][0]):pmt[0][0],"%s"%(pmt[1][1]):pmt[0][1],\
+    "%s"%(pmt[1][2]):pmt[0][2],"%s"%(pmt[1][3]):pmt[0][3],\
+    "%s"%(pmt[1][4]):pmt[0][4],"%s"%(pmt[1][5]):pmt[0][5],\
+    "%s"%(pmt[1][6]):pmt[0][6]}
+
+    pct = npa([ float(pmt[1][0]),float(pmt[1][1]),float(pmt[1][2]),\
+    float(pmt[1][3]),float(pmt[1][4]),float(pmt[1][5]),\
+    float(pmt[1][6]) ])
+
 
     return inta,proc,loca,acc,arr,Activity,br,site,timeS,\
-    boulbyIBDRate*FVkTonRatio,mass,dAct,coveNumber,covePCT
+    boulbyIBDRate*FVkTonRatio,mass,dAct,coveNumber,covePCT,pctTubes,pct
 
+    #
+    # return inta,proc,loca,acc,arr,Activity,br,site,timeS,\
+    # boulbyIBDRate*FVkTonRatio,mass,dAct,coveNumber,covePCT

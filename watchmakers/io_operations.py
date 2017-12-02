@@ -17,8 +17,7 @@ def deleteDirectory(directory):
 
 def macroGenerator(percentage,isotope,location,runs,events):
 
-    covPCT = {'10pct':0.1,'15pct':0.15,'20pct':0.2,\
-    '25pct':0.25,'30pct':0.30,'35pct':0.35,'40pct':0.40}
+    covPCT = {'20pct':0.2,'25pct':0.25}
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
 
 
@@ -178,7 +177,7 @@ def jobString(percentage,j,runs,models,arguments):
     fIn          = arguments["-f"]
     fidR         = (float(arguments["--tankRadius"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
     fidZ         = (float(arguments["--halfHeight"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
-    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000. 
+    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     pmtZ         = (float(arguments["--halfHeight"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     tankR        = float(arguments["--tankRadius"])/1000.
     tankZ        = float(arguments["--halfHeight"])/1000.
@@ -188,53 +187,53 @@ def jobString(percentage,j,runs,models,arguments):
     if sheffield:
 
         line1 = """#!/bin/sh
-    #MSUB -N WM_%s_%s_%d_%s    #name of job
-    #MSUB -A adg         # sets bank account
-    #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
-    #MSUB -q pbatch         #pool
-    #MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
-    #MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
-    #MSUB -d %s  # directory to run from
-    #MSUB -V
-    #MSUB                     # no more psub commands
+#MSUB -N WM_%s_%s_%d_%s    #name of job
+#MSUB -A adg         # sets bank account
+#MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+#MSUB -q pbatch         #pool
+#MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
+#MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
+#MSUB -d %s  # directory to run from
+#MSUB -V
+#MSUB                     # no more psub commands
 
-    source %s/bin/thisroot.sh
-    source /usr/local/gcc49/setup.sh
-    source /usr/local/geant4/setup.sh 10.3
-    source %s/geant4make.sh
-    source %s/env.sh
-    source %s/env_wm.sh
-    export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1
-    export SHEFFIELD=1\n
-    """ %(percentage,location,runs,additionalMacStr,\
-    directory,case,additionalMacStr,percentage,location,runs,\
-    directory,case,additionalMacStr,percentage,location,runs,\
-    directory,\
-    rootDir,g4Dir,ratDir,watchmakersDir)
+source %s/bin/thisroot.sh
+source /usr/local/gcc49/setup.sh
+source /usr/local/geant4/setup.sh 10.3
+source %s/geant4make.sh
+source %s/env.sh
+source %s/env_wm.sh
+export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1
+export SHEFFIELD=1\n
+""" %(percentage,location,runs,additionalMacStr,\
+directory,case,additionalMacStr,percentage,location,runs,\
+directory,case,additionalMacStr,percentage,location,runs,\
+directory,\
+rootDir,g4Dir,ratDir,watchmakersDir)
 
     else:
         line1 = """#!/bin/sh
-    #MSUB -N WM_%s_%s_%d_%s    #name of job
-    #MSUB -A adg         # sets bank account
-    #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
-    #MSUB -q pbatch         #pool
-    #MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
-    #MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
-    #MSUB -d %s  # directory to run from
-    #MSUB -V
-    #MSUB                     # no more psub commands
+#MSUB -N WM_%s_%s_%d_%s    #name of job
+#MSUB -A adg         # sets bank account
+#MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+#MSUB -q pbatch         #pool
+#MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
+#MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
+#MSUB -d %s  # directory to run from
+#MSUB -V
+#MSUB                     # no more psub commands
 
-    source %s/bin/thisroot.sh
-    source %s/../../../bin/geant4.sh
-    source %s/geant4make.sh
-    source %s/env.sh
-    source %s/env_wm.sh
-    export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1\n
-    """ %(percentage,location,runs,additionalMacStr,\
-    directory,case,additionalMacStr,percentage,location,runs,\
-    directory,case,additionalMacStr,percentage,location,runs,\
-    directory,\
-    rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
+source %s/bin/thisroot.sh
+source %s/../../../bin/geant4.sh
+source %s/geant4make.sh
+source %s/env.sh
+source %s/env_wm.sh
+export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1\n
+""" %(percentage,location,runs,additionalMacStr,\
+directory,case,additionalMacStr,percentage,location,runs,\
+directory,case,additionalMacStr,percentage,location,runs,\
+directory,\
+rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
 
     for mods in models:
         if location == "FN":
@@ -248,7 +247,7 @@ def jobString(percentage,j,runs,models,arguments):
             if additionalString != "":
                 fileNO = "ntuple_root_files%s/%s/%s/watchman_%s_%s_%s%s_%d.root" %(additionalString,mods,percentage,mods,percentage,location,additionalString,runs)
                 if sheffield:
-                    line1 += "root -b -l -q %s/watchmakers/\'goldenFileExtractor.C(\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\")\'\n" %(watchmakersDir,fileN,fileNO,minNHIT,goodness,dirGoodness,timemask,\
+                    line1 += "root -b -l -q %s/watchmakers/\'goldenFileExtractor.C(\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\'\n" %(watchmakersDir,fileN,fileNO,minNHIT,goodness,dirGoodness,timemask,\
                                     rate,distancemask,fidR,fidZ,pmtR,pmtZ,tankR,tankZ)
                     ###int goldenFileExtractor(const char *file, const char *outfile = "null", double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1, double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0, double fidBoundR = 5.42, double fidBoundZ = 5.42, double pmtBoundR = 6.42, double pmtBoundZ = 6.42, double tankBoundR = 8.02635, double tankBoundZ = 8.02635 ) {
                 else:
@@ -624,8 +623,8 @@ def testEnabledCondition(arguments):
 
 
 #    if (arguments['--fidThick'] and arguments['--shieldThick'] and arguments['--halfHeight'] and arguments['--tankRadius']):
-#        additionalMacOpt += "/rat/db/set GEO[fiducial] r_max %f\n" %(((float(arguments['--tankRadius']))-1.5875)-((float(arguments['--shieldThick']))+(float(arguments['--fidThick']))))
-#        additionalMacOpt += "/rat/db/set GEO[fiducial] size_z %f\n" %(((float(arguments['--halfHeight']))-1.5875)-((float(arguments['--shieldThick']))+(float(arguments['--fidThick']))))
+#        additionalMacOpt += "/rat/db/set GEO[fiducial] r_max %f\n" %(((float(arguments['--tankRadius']))-6.35)-((float(arguments['--shieldThick']))+(float(arguments['--fidThick']))))
+#        additionalMacOpt += "/rat/db/set GEO[fiducial] size_z %f\n" %(((float(arguments['--halfHeight']))-6.35)-((float(arguments['--shieldThick']))+(float(arguments['--fidThick']))))
 
     if (arguments['--pmtModel']):
         additionalMacOpt += "/rat/db/set GEO[inner_pmts] pmt_model \"%s\"\n" %((arguments['--pmtModel']))
@@ -671,7 +670,7 @@ def testEnabledCondition(arguments):
 
     if float(arguments['--tankRadius']) != defaultValues[baseValue+7]:
         additionalMacOpt += "/rat/db/set GEO[tank] r_max %f\n" %(float(arguments['--tankRadius']))
-        additionalMacOpt += "/rat/db/set GEO[detector] r_max %f\n" %(float(arguments['--tankRadius'])-1.5875)
+        additionalMacOpt += "/rat/db/set GEO[detector] r_max %f\n" %(float(arguments['--tankRadius'])-float(arguments['--steelThick']))
         additionalMacOpt += "/rat/db/set GEO[shield] detector_size_d %f\n" %(float(arguments['--tankRadius'])*2)
         additionalMacStr += "_tankRadius_%f" %(float(arguments['--tankRadius']))
         additionalString += "_tankRadius_%f" %(float(arguments['--tankRadius']))
@@ -679,8 +678,8 @@ def testEnabledCondition(arguments):
     if float(arguments['--halfHeight'])!= defaultValues[baseValue+8]:
         additionalMacOpt += "/rat/db/set GEO[tank] size_z %f\n" %(float(arguments['--halfHeight']))
         additionalMacOpt += "/rat/db/set GEO[shield] detector_size_z %f\n" %(float(arguments['--halfHeight'])*2)
-        additionalMacOpt += "/rat/db/set GEO[detector] size_z %f\n" %(float(arguments['--halfHeight'])-1.5875)
-        additionalMacOpt += "/rat/db/set GEO[cables] size_z %f\n" %(float(arguments['--halfHeight'])-1.5875)
+        additionalMacOpt += "/rat/db/set GEO[detector] size_z %f\n" %(float(arguments['--halfHeight'])-float(arguments['--steelThick']))
+        additionalMacOpt += "/rat/db/set GEO[cables] size_z %f\n" %(float(arguments['--halfHeight'])-float(arguments['--steelThick']))
         additionalMacStr += "_halfHeight_%f" %(float(arguments['--halfHeight']))
         additionalString += "_halfHeight_%f" %(float(arguments['--halfHeight']))
 
@@ -802,7 +801,7 @@ def extractNtuple(arguments):
     fIn          = arguments["-f"]
     fidR         = (float(arguments["--tankRadius"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
     fidZ         = (float(arguments["--halfHeight"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
-    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000. 
+    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     pmtZ         = (float(arguments["--halfHeight"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     tankR        = float(arguments["--tankRadius"])/1000.
     tankZ        = float(arguments["--halfHeight"])/1000.
@@ -836,7 +835,7 @@ def extractNtupleALL(arguments):
     minNHIT      = float(arguments['-T'])
     fidR         = (float(arguments["--tankRadius"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
     fidZ         = (float(arguments["--halfHeight"])-float(arguments["--shieldThick"])-float(arguments["--steelThick"])-float(arguments["--fidThick"]))/1000.
-    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000. 
+    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     pmtZ         = (float(arguments["--halfHeight"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
     tankR        = float(arguments["--tankRadius"])/1000.
     tankZ        = float(arguments["--halfHeight"])/1000.

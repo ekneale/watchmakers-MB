@@ -1556,14 +1556,17 @@ def obtainAbsoluteEfficiency(f,timeScale='day',cut = 10.0):
 
     f           = TFile(f,'read')
     EG          = {}
+    # print 'Before'
+    # print covPCT
+    # print pct
 
-
-
-    inta,proc,loca,acc,arr,Activity,br,site,timeS,boulbyNeutronFV,mass,dAct,cove,covePCT = loadAnalysisParameters(timeScale)
+    inta,proc,loca,acc,arr,Activity,br,site,timeS,boulbyNeutronFV,mass,dAct,cove,covePCT,covPCT,pct = loadAnalysisParameters(timeScale)
     #print boulbyNeutronFV
     #print 'activity',Activity
     #print dAct
-
+    # print 'After'
+    # print covPCT
+    # print pct
 
     x,y         = Double(0.),Double(0.)
     boolFirst   = True

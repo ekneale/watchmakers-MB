@@ -23,8 +23,8 @@ int goldenFileExtractor(const char *file, const char *outfile = "null",
 double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1,
 double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0,
 double fidBoundR = 5.42, double fidBoundZ = 5.42,
-double pmtBoundR = 6.4,double pmtBoundZ = 6.4,
-double tankBoundR = 8.0000,double tankBoundZ = 8.0000) {
+double pmtBoundR = 6.42,double pmtBoundZ = 6.42,
+double tankBoundR = 8.02635,double tankBoundZ = 8.02635) {
 
     // Define the incoming out outgoing Trees
     TFile *f = new TFile(file);
@@ -377,7 +377,7 @@ double tankBoundR = 8.0000,double tankBoundZ = 8.0000) {
     return 0;
 }
 
-void FindVolume(Double_t r_t,Double_t z_t,Int_t &FV_t,Int_t &GSV_t,Int_t &IV_t,Int_t &EV_t,Int_t &OV_t,double fidBoundR,fidBoundZ,double pmtBoundR,double pmtBoundZ, double tankBoundR, double tankBoundZ){
+void FindVolume(Double_t r_t,Double_t z_t,Int_t &FV_t,Int_t &GSV_t,Int_t &IV_t,Int_t &EV_t,Int_t &OV_t,double fidBoundR,double fidBoundZ,double pmtBoundR,double pmtBoundZ, double tankBoundR, double tankBoundZ){
 
     FV_t = GSV_t = IV_t = EV_t = OV_t = 0;
     if (r_t < fidBoundR && fabs(z_t) < fidBoundZ) {
