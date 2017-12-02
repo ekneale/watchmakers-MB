@@ -17,7 +17,8 @@ def deleteDirectory(directory):
 
 def macroGenerator(percentage,isotope,location,runs,events):
 
-    covPCT = {'20pct':0.2,'25pct':0.25}
+    covPCT ={'10pct':0.1,'15pct':0.15,'20pct':0.2,\               
+             '25pct':0.25,'30pct':0.30,'35pct':0.35,'40pct':0.40}
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
 
 
