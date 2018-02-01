@@ -432,7 +432,7 @@ def sensitivityMapNew():
                     #Include 29% other reactor
                     if site == 'boulby' and cores ==1 :
                         BRS    = S*1.29 # 29.% other reactor
-			B      = BAC+BRN+BFN+BRS
+                        B      = BAC+BRN+BFN+BRS
                         SSBB   = S/sqrt(B + (S+B)/OnOffRatio)
                         T3SIGMA = 9.*(B +(S+B)/OnOffRatio)/S/S
                         nuRate = boulbyRate
@@ -450,6 +450,8 @@ def sensitivityMapNew():
                         SSBB   = S/sqrt(B + (S+B)/OnOffRatio)
                         T3SIGMA = 9.*(B + (S+B)/OnOffRatio)/S/S#5% other reactor
                         nuRate = imbRate
+                    # For debugging purposes
+                    # print "%3d %3d %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f" %(PC,cut,S,S/nuRate,BAC,BRN,BFN,BRS,B,SSBB,T3SIGMA)
 
                     if  T3SIGMA < maxTime:
                         print "%3d %3d %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f" %(PC,cut,S,S/nuRate,BAC,BRN,BFN,BRS,B,SSBB,T3SIGMA)

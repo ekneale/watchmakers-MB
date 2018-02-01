@@ -37,7 +37,7 @@ except:
 defaultValues  = [1,3,2500,2805.,'merged_ntuple_watchman',\
 'merged_ntuple_watchman','null', 'processed_watchman.root',\
 10.,2.0, 100.0, 9, 0.65,0.1,8026.35,8026.35,1600.0,6.35,1000.,\
-'day','boulby', 1.0, 0.043, 0.133]
+'day','boulby', 1.0, 0.043, 0.133,0.002]
 
 docstring = """
     Usage: watchmakers.py [options]
@@ -61,6 +61,9 @@ docstring = """
     --ntupleout=<outN>  Name of ntuple out [Default: %s]
     -o=<outputfile>     Efficiency output file [Default: %s]
     --supernovaFormat   Record supernova files instead of golden files
+    --pass1Trigger      Process rat-pac files with pass1 triggering
+    --pass2Trigger      Process pass1 files with pass2 conditions
+    --fileDict          Create a dicionary of exisiting files
 
     -r=<rate>           rate of accidentals in hz [Default: %f]
     -d=<distance>       Maximal distance between two events (m) [Default: %f]
@@ -101,7 +104,7 @@ docstring = """
 
     --U238_PPM=<_Uppm>  Concentration of U-238 in glass [Default: %f]
     --Th232_PPM=<_Thp>  Concentration of Th-232 in glass [Default: %f]
-    --Rn222=<_Rn>       Radon activity in water [Default: 6.4]
+    --Rn222=<_Rn>       Radon activity in water SK 2x10^-3 Bq/m^3 [Default: %f]
 
     --detectMedia=<_dM>  Detector media (doped_water,...)
     --collectionEff=<CE> Collection efficiency (e.g.: 0.85,0.67,0.475)
@@ -114,7 +117,7 @@ docstring = """
            defaultValues[9],defaultValues[10],defaultValues[11],defaultValues[12],\
            defaultValues[13],defaultValues[14],defaultValues[15],defaultValues[16],\
            defaultValues[17],defaultValues[18],defaultValues[19],defaultValues[20],\
-           defaultValues[21],defaultValues[22],defaultValues[23])
+           defaultValues[21],defaultValues[22],defaultValues[23],defaultValues[24])
 
 try:
     import docopt
@@ -130,6 +133,10 @@ gSystem.AddIncludePath(" -I$RATROOT/include")
 
 gROOT.LoadMacro("$WATCHENV/watchmakers/goldenFileExtractor.C")
 from ROOT import goldenFileExtractor
+
+gROOT.LoadMacro("$WATCHENV/watchmakers/pass1Trigger.C")
+from ROOT import pass1Trigger
+
 
 # This is deprecated
 # gROOT.LoadMacro("$WATCHENV/watchmakers/supernovaAnalysis.C")
@@ -222,11 +229,7 @@ def loadAnalysisParameters(timeScale='day'):
     #PMT mass in kilograms
     mass = 1.4 # from Hamamatsu tech details
 
-    #Evaluate FV to total detector volume ratio
-    nKiloTons   = 3.22
-    FreeProtons = 0.6065
-    TNU         = FreeProtons* nKiloTons *timeSec
-    #FVkTonRatio = pow(float(arguments['--fv']),3)/pow(float(arguments['--tankDis']),3)
+
 
     ### This had been changed by M.B. from Tamzin implementation
     fidRadius = float(arguments['--tankRadius'])-float(arguments['--steelThick'])-float(arguments['--shieldThick'])-float(arguments['--fidThick'])
@@ -235,10 +238,16 @@ def loadAnalysisParameters(timeScale='day'):
     tankRadius  = float(arguments["--tankRadius"])-float(arguments['--steelThick'])
     tankHeight  = float(arguments["--halfHeight"])-float(arguments['--steelThick'])
 
-    fidVolume  = pow(fidRadius,2)*(2.*fidHeight)
-    tankVolume = pow(tankRadius,2)*(2.*tankHeight)
+    fidVolume  = pi*pow(fidRadius/1000.,2)*(2.*fidHeight/1000.)
+    tankVolume = pi*pow(tankRadius/1000.,2)*(2.*tankHeight/1000.)
     FVkTonRatio = fidVolume/tankVolume
     #print "Change in load.py"
+
+    #Evaluate FV to total detector volume ratio
+    nKiloTons   = tankVolume/1000.
+    FreeProtons = 0.6065
+    TNU         = FreeProtons* nKiloTons *timeSec
+    #FVkTonRatio = pow(float(arguments['--fv']),3)/pow(float(arguments['--tankDis']),3)
 
     #Fast neutrons conversion
     #Rock mass
@@ -332,8 +341,8 @@ def loadAnalysisParameters(timeScale='day'):
 
 
     #Add the Rn-222 chain
-    N_Rn222     = 2e-3 # Bq/m3
-    ActivityRn222     = float(arguments["--Rn222"])
+    # N_Rn222     = 2e-3 # Bq/m3
+    ActivityRn222     = float(arguments["--Rn222"])*nKiloTons*1e3 #required tons, not ktons
 #    _proc       =['222Rn','214Pb','214Bi','210Bi','210Tl']
 #    _loca       =['FV', 'FV',   'FV',   'FV',   'FV']
 #    acc         +=['chain','acc',  'acc',  'acc',   'acc']
@@ -349,7 +358,7 @@ def loadAnalysisParameters(timeScale='day'):
     _site        = ['', '',     '',     '',     '']
 
     arr = empty(4)
-    arr[:]      = 6.4
+    arr[:]      = ActivityRn222
     Activity    = append(   Activity,arr)
     proc        += _proc
     loca        += _loca

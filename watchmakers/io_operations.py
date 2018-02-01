@@ -1,6 +1,8 @@
 from load import *
 
-
+# The purpose of this class is to handle the input/ouput operations of
+# WATCHMAKERS (WM). This include creating directories and files for the different
+# operations of WM, such as creating macros, jobs and so forth.
 
 def testCreateDirectory(directory):
     if not os.path.exists(directory):
@@ -12,15 +14,16 @@ def testCreateDirectory(directory):
 def deleteDirectory(directory):
     if os.path.exists(directory):
         rmtree(directory)
-#
 
+def testCreateDirectoryIfNotExist(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 def macroGenerator(percentage,isotope,location,runs,events):
 
     covPCT ={'10pct':0.1,'15pct':0.15,'20pct':0.2,\
     '25pct':0.25,'30pct':0.30,'35pct':0.35,'40pct':0.40}
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
-
 
     #Part of the macro that is the same for all jobs
     dir = os.getcwd()
@@ -188,6 +191,7 @@ def jobString(percentage,j,runs,models,arguments):
     if sheffield:
 
         line1 = """#!/bin/sh
+
 #MSUB -N WM_%s_%s_%d_%s    #name of job
 #MSUB -A adg         # sets bank account
 #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
@@ -261,18 +265,13 @@ def generateMacros(N,e):
     d,iso,loc,coverage,coveragePCT = loadSimulationParameters()
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
     print additionalMacOpt
-#    N = int(arguments['-N'])
     print N,e
     ##Clean or create macro directories
     for j in range(len(iso)):
         for ii in d["%s"%(iso[int(j)])]:
             for idx,cover in enumerate(coverage):
                 dir = "macro%s/%s/%s" %(additionalMacStr,ii,cover)
-#                print dir
                 testCreateDirectory(dir)
-#    for idx,cover in enumerate(coverage):
-#        dir = "%s" %(cover)
-#        testCreateDirectory(dir)
 
     for j in range(len(iso)):
         for ii in d["%s"%(iso[int(j)])]:
@@ -335,15 +334,6 @@ def generateJobs(N,arguments):
                 if not os.path.exists(directory):
                     os.makedirs(directory)
 
-    #
-    # for j in range(len(iso)):
-    #     for ii in d["%s"%(iso[int(j)])]:
-    #         for idx,cover in enumerate(coverage):
-    #             directory = "ntuple_root_files/%s/%s" %(ii,cover)
-    #             if not os.path.exists(directory):
-    #                 os.makedirs(directory)
-    #
-
     for j in range(len(iso)):
         for ii in d["%s"%(iso[int(j)])]:
             for idx,cover in enumerate(coverage):
@@ -357,7 +347,6 @@ def generateJobs(N,arguments):
                 directory = "log_case%s%s/%s/%s" %(case,additionalMacStr,ii,cover)
                 if not os.path.exists(directory):
                     os.makedirs(directory)
-
 
     '''Make sure that the softlink are correct for Bonsai input'''
 
@@ -375,8 +364,7 @@ def generateJobs(N,arguments):
 
     job = 'jobs_case%s%s'%(case,additionalMacStr)
 
-    job_list = '''#!/bin/sh
-'''
+    job_list = '''#!/bin/sh\n'''
 
     for j in range(len(iso)):
         for idx,cover in enumerate(coverage):
@@ -394,7 +382,7 @@ def generateJobs(N,arguments):
                         job_list+= '(msub ' + stringFile +') || ./'+ stringFile + '\n'
                     outfile = open(stringFile,"wb")
                     outfile.writelines(line)
-                    
+
                     if index < N-1:
                         stringFile1 = "(msub %s/%s/%s/jobs%s_%s_%s_%d_case%d.sh || ./%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh)" %(job,loc[j],cover,cover,\
                                                                                                  "%s"%(iso[int(j)]),loc[j],index+1,case,job,loc[j],cover,cover,\
@@ -410,143 +398,6 @@ def generateJobs(N,arguments):
     os.chmod('sub_jobs_case%s%s'%(case,additionalMacStr),S_IRWXG)
     os.chmod('sub_jobs_case%s%s'%(case,additionalMacStr),S_IRWXU)
     return 0
-
-
-def customJob(arguments):
-
-    directory   = os.getcwd()
-    softDir     = "/usr/gapps/adg/geant4/rat_pac_and_dependency"
-    ratDir      = os.environ['RATROOT']
-    rootDir     = os.environ['ROOTSYS']
-    g4Dir       =  os.environ['G4INSTALL']
-    watchmakersDir = os.environ['WATCHENV']
-    sheffield   = os.environ['SHEFFIELD']
-
-    if sheffield:
-        print 'Running on sheffield cluster'
-    software    = "%s/bin/rat" %(ratDir)
-
-
-    ''' Custom job for photocoverage 02-2017 analyis'''
-
-    d,iso,loc,coverage,coveragePCT = loadSimulationParameters()
-
-    cnt = 0
-
-    outF2 = open('sub_cust_job',"wb")
-    outF2.writelines('#!/bin/sh\n')
-
-
-    for j in range(len(iso)):
-        for ii in d["%s"%(iso[int(j)])]:
-            line1 = """#!/bin/sh
-#MSUB -N WM_%s_%s    #name of job
-#MSUB -A adg         # sets bank account
-#MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
-#MSUB -q pbatch         #pool
-#MSUB -o %s/log/CJwmpc_%s_%s.log
-#MSUB -e %s/log/CJwmpc_%s_%s.err
-#MSUB -d %s  # directory to run from
-#MSUB -V
-#MSUB                     # no more psub commands
-
-source %s/bin/thisroot.sh
-source %s/../../../bin/geant4.sh
-source %s/geant4make.sh
-source %s/env.sh
-source %s/env_wm.sh
-export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1\n
-""" %(ii,loc[j],\
-                      directory,ii,loc[j],\
-                      directory,ii,loc[j],\
-                      directory,\
-                      rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
-#            line2 = "watch --extractNtup -N 600 -P %s -L %s \n" %(ii,loc[j])
-#            line3 = "watch --extractNtup -N 600 -P %s -L %s --fv 4.302\n" %(ii,loc[j])
-#            line4 = "watch --extractNtup -N 600 -P %s -L %s --fv 4.302 -g 0.65\n" %(ii,loc[j])
-#            line5 = "watch --extractNtup -N 600 -P %s -L %s --fv 4.302 -g 0.65 -T 12\n" %(ii,loc[j])
-#            line6 = "watch --extractNtup -N 600 -P %s -L %s --fv 4.302 -T 12\n" %(ii,loc[j])
-#            line7 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65\n" %(ii,loc[j])
-#            line8 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65 -T 12\n" %(ii,loc[j])
-#            line9 = "watch --extractNtup -N 600 -P %s -L %s -T 12\n" %(ii,loc[j])
-
-            line2 = "watch --extractNtup -N 600 -P %s -L %s \n" %(ii,loc[j])
-            line3 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65\n" %(ii,loc[j])
-            line4 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65 -T 8\n" %(ii,loc[j])
-            line5 = "watch --extractNtup -N 600 -P %s -L %s -T 8\n" %(ii,loc[j])
-            line6 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65 -T 10\n" %(ii,loc[j])
-            line7 = "watch --extractNtup -N 600 -P %s -L %s -T 10\n" %(ii,loc[j])
-            line8 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65 -T 12\n" %(ii,loc[j])
-            line9 = "watch --extractNtup -N 600 -P %s -L %s -T 12\n" %(ii,loc[j])
-            line10 = "watch --extractNtup -N 600 -P %s -L %s -g 0.65 -T 14\n" %(ii,loc[j])
-            line11 = "watch --extractNtup -N 600 -P %s -L %s -T 14\n" %(ii,loc[j])
-
-
-            outfile = open('jobs/sub_jobs__%d_2'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_2\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line2)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_3'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_3\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line3)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_4'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_4\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line4)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_5'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_5\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line5)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_6'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_6\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line6)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_7'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_7\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line7)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_8'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_8\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line8)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_9'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_9\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line9)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_10'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_10\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line10)
-            outfile.close
-
-            outfile = open('jobs/sub_jobs__%d_11'%(cnt),"wb")
-            outF2.writelines('msub jobs/sub_jobs__%d_11\n'%(cnt))
-            outfile.writelines(line1)
-            outfile.writelines(line11)
-            outfile.close
-
-            cnt+=1
-    outF2.close
-
-
-
 
 
 def deleteAllWorkDirectories():
@@ -575,7 +426,6 @@ def deleteAllWorkDirectories():
         os.remove('sub_jobs')
 
 
-
 def mergeFiles():
     # Read external requirements
     #arguments = docopt.docopt(docstring)
@@ -601,6 +451,7 @@ def mergeFiles():
     del trees
     return 0
 
+
 def testEnabledCondition(arguments):
 
     additionalString      = ""
@@ -609,7 +460,7 @@ def testEnabledCondition(arguments):
     additionalMacStr = ""
     additionalMacOpt = ""
 
-# Commands required for root_file
+    # Commands required for root_file
 
     if (arguments['--detectMedia']):
         additionalMacOpt += "/rat/db/set GEO[detector] material \"%s\"\n" %(arguments['--detectMedia'])
@@ -620,8 +471,6 @@ def testEnabledCondition(arguments):
         additionalMacOpt += "/rat/db/set GEO[inner_pmts] efficiency_correction %f\n" %(float(arguments['--collectionEff']))
         additionalMacStr += "_collectionEfficiency_%f" %(float(arguments['--collectionEff']))
         additionalString += "_collectionEfficiency_%f" %(float(arguments['--collectionEff']))
-
-
 
 #    if (arguments['--fidThick'] and arguments['--shieldThick'] and arguments['--halfHeight'] and arguments['--tankRadius']):
 #        additionalMacOpt += "/rat/db/set GEO[fiducial] r_max %f\n" %(((float(arguments['--tankRadius']))-6.35)-((float(arguments['--shieldThick']))+(float(arguments['--fidThick']))))
@@ -644,7 +493,7 @@ def testEnabledCondition(arguments):
 
     baseValue = 7
     #Analysis strings, usually shows up in ntuple processing
-#    print defaultValues[baseValue+1]
+    #    print defaultValues[baseValue+1]
     if float(arguments['-r'])          != defaultValues[baseValue+1]:
         additionalString += "_rate_%f" %(float(arguments['-r']))
         additionalCommands += " -r %f " %(float(arguments['-r']))
@@ -695,9 +544,20 @@ def testEnabledCondition(arguments):
         additionalString += "_steelThickness_%f" %(float(arguments['--steelThick']))
 
     if float(arguments['--fidThick'])!= defaultValues[baseValue+11]:
-       # additionalString += "_fidThickness_%f" %(float(arguments['--fidThick']))
+        additionalString += "_fidThickness_%f" %(float(arguments['--fidThick']))
         additionalCommands +=" --fidThick %f" %(float(arguments['--fidThick']))
 
+    if float(arguments['--U238_PPM'])!= defaultValues[baseValue+15]:
+        additionalString += "_U238_PPM_%f" %(float(arguments['--U238_PPM']))
+        additionalCommands +=" --U238_PPM %f" %(float(arguments['--U238_PPM']))
+
+    if float(arguments['--Th232_PPM'])!= defaultValues[baseValue+16]:
+        additionalString += "_Th232_PPM_%f" %(float(arguments['--Th232_PPM']))
+        additionalCommands +=" --Th232_PPM %f" %(float(arguments['--Th232_PPM']))
+
+    if float(arguments['--Rn222'])!= defaultValues[baseValue+17]:
+        additionalString += "_Rn222_%f" %(float(arguments['--Rn222']))
+        additionalCommands +=" --Rn222 %f" %(float(arguments['--Rn222']))
 
 
     if int(arguments['--supernovaFormat']):
@@ -711,9 +571,6 @@ def testEnabledCondition(arguments):
         additionalMacStr = "_default"
 
     return  additionalString,additionalCommands,additionalMacStr,additionalMacOpt
-
-
-
 
 
 def writeResultsToFile(s,g,h):
@@ -787,9 +644,6 @@ def mergeNtupleFiles(arguments):
     return 0
 
 
-
-
-
 def extractNtuple(arguments):
 
     N            = int(arguments["-N"])
@@ -807,11 +661,11 @@ def extractNtuple(arguments):
     tankR        = float(arguments["--tankRadius"])/1000.
     tankZ        = float(arguments["--halfHeight"])/1000.
     outF         = arguments["--ntupleout"]
-    superNova    = arguments["--supernovaFormat"]
+    pass1Trigger = arguments["--pass1Trigger"]
 
     print file
     d,iso,loc,coverage,coveragePCT = loadSimulationParameters()
-    if not superNova:
+    if not pass1Trigger:
         try:
             goldenFileExtractor(fIn,outF,minNHIT,goodness,dirGoodness,timemask,\
                             rate,distancemask,fidR,fidZ,pmtR,pmtZ,tankR,tankZ)
@@ -819,9 +673,10 @@ def extractNtuple(arguments):
             print "Error.."
     else:
         try:
-            supernovaAnalysis(fIn,outF)
+            pass1Trigger(fIn,outF)
         except:
             print "Error.."
+
 
 def extractNtupleALL(arguments):
     d,iso,loc,coverage,coveragePCT = loadSimulationParameters()
@@ -852,19 +707,6 @@ def extractNtupleALL(arguments):
                 directory = "ntuple_root_files%s/%s/%s" %(additionalString,ii,cover)
                 if not os.path.exists(directory):
                     os.makedirs(directory)
-
-
-
-#    for j in range(len(iso)):
-#            for ii in d["%s"%(iso[int(j)])]:
-#                for idx,cover in enumerate(coverage):
-#                    for run in range(N):
-#                        fIn =  "root_files/%s/%s/watchman_%s_%s_%s_%d.root" %(ii,cover,ii,cover,loc[j],run)
-#                        fOut = "ntuple_root_files%s/%s/%s/watchman_%s_%s_%s_%d.root" %(additionalString,ii,cover,ii,cover,loc[j],run)
-#                        print fIn, " -> ", fOut
-#                        goldenFileExtractor(fIn,minNHIT,goodness,dirGoodness,timemask,\
-#                                                rate,distancemask,fidR,fidZ,pmtR,pmtZ,tankR,tankZ,fOut)
-
 
 
     if arguments["-P"] and arguments["-L"]:
@@ -913,3 +755,292 @@ def extractNtupleALL(arguments):
                                     supernovaAnalysis(fIn,fOut)
                                 except:
                                     print "Error.."
+
+
+def createFileDictionary(arguments,prefix=""):
+    # Function created due to slowness of loading directories with multiple
+    # files on the LLNL cluster Borax. This dictionary will be used for
+    # pass2
+    from os import listdir
+    from os.path import isfile, join
+    simParam    = loadSimulationParameters()
+    d           = simParam[0]
+    iso         = simParam[1]
+    loc         = simParam[2]
+    coverage    = simParam[3]
+
+    parameters  = loadAnalysisParameters(arguments["--timeScale"])
+    rates       = parameters[11]
+    mass        = parameters[10]
+    pc_num      = parameters[12]
+    pc_val      = parameters[13]
+    timeS       = parameters[8]
+
+    testCond            = testEnabledCondition(arguments)
+    additionalString    = testCond[0]
+    additionalCommands  = testCond[1]
+    additionalMacStr    = testCond[2]
+    additionalMacOpt    = testCond[3]
+
+
+    dictionary = {}
+    if prefix == "":
+        recordOptions = additionalMacStr
+    else:
+        recordOptions = additionalString
+    ##Create new pass1 directories
+    for j in range(len(iso)):
+        for ii in d["%s"%(iso[int(j)])]:
+            for idx,cover in enumerate(coverage):
+
+                dir_root = "%sroot_files%s/%s/%s/" %(prefix,recordOptions,ii,cover)
+                print "Finding files in ", dir_root
+                dictionary["%s"%(dir_root)] = [f for f in listdir(dir_root) if isfile(join(dir_root, f))]
+
+    import pickle
+    with open('dictionary%s%s.pkl'%(prefix,recordOptions),'wb') as f:
+        pickle.dump(dictionary,f,pickle.HIGHEST_PROTOCOL)
+
+def load_obj(arguments,prefix=""):
+    import pickle
+    testCond            = testEnabledCondition(arguments)
+    additionalString    = testCond[0]
+    additionalMacStr    = testCond[2]
+    if prefix == "":
+        recordOptions = additionalMacStr
+    else:
+        recordOptions = additionalString
+    with open('dictionary%s%s.pkl'%(prefix,recordOptions), 'rb') as f:
+        return pickle.load(f)
+
+
+
+def performPass1(arguments):
+    rootDir     = os.environ['ROOTSYS']
+    softDir     = "/usr/gapps/adg/geant4/rat_pac_and_dependency"
+    ratDir      = os.environ['RATROOT']
+    rootDir     = os.environ['ROOTSYS']
+    g4Dir       =  os.environ['G4INSTALL']
+    watchmakersDir = os.environ['WATCHENV']
+    directory   = os.getcwd()
+    from os import listdir
+    from os.path import isfile, join
+    # Perform Pass1 : Apply pass1 algorythm to the rootfiles generated by rat-pac
+    # and save results in appropriate folders.
+    simParam    = loadSimulationParameters()
+    d           = simParam[0]
+    iso         = simParam[1]
+    loc         = simParam[2]
+    coverage    = simParam[3]
+
+    parameters  = loadAnalysisParameters(arguments["--timeScale"])
+    rates       = parameters[11]
+    mass        = parameters[10]
+    pc_num      = parameters[12]
+    pc_val      = parameters[13]
+    timeS       = parameters[8]
+
+    testCond            = testEnabledCondition(arguments)
+    additionalString    = testCond[0]
+    additionalCommands  = testCond[1]
+    additionalMacStr    = testCond[2]
+    additionalMacOpt    = testCond[3]
+
+
+    pmtR         = (float(arguments["--tankRadius"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
+    pmtZ         = (float(arguments["--halfHeight"])-float(arguments["--steelThick"])-float(arguments["--shieldThick"]))/1000.
+    tankR        = (float(arguments["--tankRadius"])-float(arguments["--steelThick"]))/1000.
+    tankZ        = (float(arguments["--halfHeight"])-float(arguments["--steelThick"]))/1000.
+
+    codes = {'234Pa':910234,'214Pb':820214,'214Bi':830214,'210Bi':830210,'210Tl':820210,\
+    '228Ac':890228,'212Pb':820212,'212Bi':830212,'208Tl':810208,\
+    '9003':9003,'11003':11003,\
+    'FTFP_BERT':1,'QBBC':2,'QBBC_EMZ':3,'QGSP_BERT':4,\
+    'QGSP_BERT_EMV':5,'QGSP_BERT_EMX':6,'QGSP_BIC':7,'QGSP_FTFP_BERT':8,\
+    'boulby':11,'neutron':2112}
+    ##Create new pass1 directories
+    for j in range(len(iso)):
+        for ii in d["%s"%(iso[int(j)])]:
+            for idx,cover in enumerate(coverage):
+                dir = "pass1_root_files%s/%s/%s" %(additionalString,ii,cover)
+                testCreateDirectoryIfNotExist(dir)
+
+
+    try:
+        dictionary = load_obj(arguments)
+    except:
+        print 'Dictionary does not exist, creating it now'
+        createFileDictionary(arguments)
+        dictionary = load_obj(arguments)
+
+    outfile = open("JOB_pass1_%s.sh" %(additionalString),"wb")
+    outfile.writelines("#!/bin/sh\n")
+    for j in range(len(iso)):
+        for ii in d["%s"%(iso[int(j)])]:
+            for idx,cover in enumerate(coverage):
+                _str = "job/JOB_pass1_%s%s%s.sh" %(additionalString,ii,cover)
+                outfile.writelines('msub %s\n'%(_str))
+                outfile2 = open(_str,"wb")
+                outfile2.writelines("""#!/bin/sh
+            #MSUB -N pass1_%s_%s_%s    #name of job
+            #MSUB -A ared         # sets bank account
+            #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+            #MSUB -q pbatch         #pool
+            #MSUB -o log/pass1_%s_%s_%s.log
+            #MSUB -e log/pass1_%s_%s_%s.err
+            #MSUB -d %s  # directory to run from
+            #MSUB -V
+            #MSUB                     # no more psub commands
+
+            source %s/bin/thisroot.sh
+            source %s/../../../bin/geant4.sh
+            source %s/geant4make.sh
+            source %s/env.sh
+            source %s/env_wm.sh
+            """%(additionalString,ii,cover,\
+            additionalString,ii,cover,additionalString,ii,cover,\
+            directory,rootDir,g4Dir,g4Dir,ratDir,watchmakersDir))
+
+                dir_root = "root_files%s/%s/%s/" %(additionalMacStr,ii,cover)
+                dir_p1 = "pass1_root_files%s/%s/%s/" %(additionalString,ii,cover)
+                print "Processing ", dir_root
+                onlyfiles = dictionary["%s"%(dir_root)]
+                for _f in onlyfiles:
+                    if 'PMT' in _f:
+                        _rate = rates["%s_%s"%(ii,'PMT')]
+                        _rate*=pc_num["%s"%(cover)]*mass
+                        _c = int(codes["%s"%(ii)])
+                        _c += 100000000
+                    elif 'FV' in _f:
+                        _rate = rates["%s_%s"%(ii,'FV')]
+                        _c = int(codes["%s"%(ii)])
+                        _c += 200000000
+                    elif 'RN' in _f:
+                        _rate = rates["%s_%s"%(ii,'RN')]
+                        _c = int(codes["%s"%(ii)])
+                        _c += 300000000
+                    elif 'FN' in _f:
+                        _rate = rates["%s_%s"%(ii,'FN')]/8. # Since we have 8 models, we can take the average
+                        _c = int(codes["%s"%(ii)])
+                        _c += 400000000
+                    elif 'boulby' in _f:
+                        _rate = rates["%s_%s"%('boulby','S')]
+                        _c = int(codes["%s"%(ii)])
+                        _c += 600000000
+                    elif 'neutron' in _f:
+                        _rate = rates["%s_%s"%('boulby','S')]
+                        _c = int(codes["%s"%(ii)])
+                        _c += 600000000
+                    else:
+                        _c = 404
+                    line = "root -b -q $WATCHENV/watchmakers/\'pass1Trigger.C(\"%s\",%f,%d,%d,\"%s\",%f,%f,%f,%f)\'\n" %(dir_root+_f,_rate,_c,pc_num["%s"%(cover)],dir_p1+_f,pmtR,pmtZ,tankR,tankZ)
+                    outfile2.writelines(line)
+                outfile2.close
+    outfile.close
+
+
+
+
+
+
+
+def performPass2(arguments):
+    rootDir     = os.environ['ROOTSYS']
+    softDir     = "/usr/gapps/adg/geant4/rat_pac_and_dependency"
+    ratDir      = os.environ['RATROOT']
+    rootDir     = os.environ['ROOTSYS']
+    g4Dir       =  os.environ['G4INSTALL']
+    watchmakersDir = os.environ['WATCHENV']
+    directory   = os.getcwd()
+    from os import listdir
+    from os.path import isfile, join
+    # Perform Pass2 : Apply pass2 algorythm to the pass1 files
+    # and save results in appropriate folders.
+    simParam    = loadSimulationParameters()
+    d           = simParam[0]
+    iso         = simParam[1]
+    loc         = simParam[2]
+    coverage    = simParam[3]
+
+    parameters  = loadAnalysisParameters(arguments["--timeScale"])
+    rates       = parameters[11]
+    mass        = parameters[10]
+    pc_num      = parameters[12]
+    pc_val      = parameters[13]
+    timeS       = parameters[8]
+
+    testCond            = testEnabledCondition(arguments)
+    additionalString    = testCond[0]
+    additionalCommands  = testCond[1]
+    additionalMacStr    = testCond[2]
+    additionalMacOpt    = testCond[3]
+
+
+    ##Create new pass1 directories
+    for j in range(len(iso)):
+        for ii in d["%s"%(iso[int(j)])]:
+            for idx,cover in enumerate(coverage):
+                dir = "pass2_root_files%s/%s" %(additionalString,cover)
+                testCreateDirectoryIfNotExist(dir)
+
+    try:
+        dictionary = load_obj(arguments,"pass1_")
+    except:
+        print 'Dictionary does not exist, creating it now'
+        createFileDictionary(arguments,"pass1_")
+        dictionary = load_obj(arguments,"pass1_")
+
+    outfile = open("JOB_pass2_%s.sh" %(additionalString),"wb")
+    outfile.writelines("#!/bin/sh\n")
+    for j in range(len(iso)):
+        for ii in d["%s"%(iso[int(j)])]:
+            if loc[j]!='FV':## Since it hunts for files in folder, this is redundant
+                for idx,cover in enumerate(coverage):
+                    _str = "job/JOB_pass2_%s%s%s.sh" %(additionalString,ii,cover)
+                    outfile.writelines('msub %s\n'%(_str))
+                    outfile2 = open(_str,"wb")
+                    outfile2.writelines("""#!/bin/sh
+                #MSUB -N pass2_%s_%s_%s    #name of job
+                #MSUB -A ared         # sets bank account
+                #MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
+                #MSUB -q pbatch         #pool
+                #MSUB -o log/pass2_%s_%s_%s.log
+                #MSUB -e log/pass2_%s_%s_%s.err
+                #MSUB -d %s  # directory to run from
+                #MSUB -V
+                #MSUB                     # no more psub commands
+
+                source %s/bin/thisroot.sh
+                source %s/../../../bin/geant4.sh
+                source %s/geant4make.sh
+                source %s/env.sh
+                source %s/env_wm.sh
+                """%(additionalString,ii,cover,\
+                additionalString,ii,cover,additionalString,ii,cover,\
+                directory,rootDir,g4Dir,g4Dir,ratDir,watchmakersDir))
+
+                    dir_p1 = "pass1_root_files%s/%s/%s/" %(additionalString,ii,cover)
+                    dir_p2 = "pass2_root_files%s/%s/" %(additionalString,cover)
+                    _file = "watchman_%s.root"%(ii)
+
+                    print "Will create ",dir_p2+_file
+                    onlyfiles = dictionary["%s"%(dir_p1)]
+                    first = 1
+                    firstPMT = 1
+                    firstFV = 1
+                    for _f in onlyfiles:
+                        if 'PMT' in _f or 'FV' in _f:
+                            if 'PMT' in _f:
+                                _file = "watchman_%s_%s.root"%(ii,'PMT')
+                                line = "root -b -q $WATCHENV/watchmakers/\'pass2Trigger.C(\"%s\",\"%s\",%d)\'\n" %(dir_p2+_file,dir_p1+_f,firstPMT)
+                                firstPMT = 0
+                            if 'FV' in _f:
+                                _file = "watchman_%s_%s.root"%(ii,'WV')
+                                line = "root -b -q $WATCHENV/watchmakers/\'pass2Trigger.C(\"%s\",\"%s\",%d)\'\n" %(dir_p2+_file,dir_p1+_f,firstFV)
+                                firstFV = 0
+                        else:
+                            line = "root -b -q $WATCHENV/watchmakers/\'pass2Trigger.C(\"%s\",\"%s\",%d)\'\n" %(dir_p2+_file,dir_p1+_f,first)
+                            first = 0
+                        outfile2.writelines(line)
+                    outfile2.close
+    outfile.close

@@ -4,7 +4,7 @@ from watchmakers.load import *
 from watchmakers.io_operations import *
 from watchmakers.analysis import *
 from watchmakers.sensitivity import *
-from watchmakers.read import *
+from watchmakers.data import *
 
 ######################## Start of main function ###########################
 
@@ -41,16 +41,20 @@ if __name__ == "__main__":
     if  arguments["--efficiency"]:
         extractHistogramWitCorrectRate()
 
-    if arguments['-R']:
-        sensitivityMap()
-
-
     if arguments['--sensitivity']:
         sensitivityMapNew()
 
-
     if arguments['--customJob']:
         customJob(arguments)
+
+    if arguments['--pass1Trigger']:
+        performPass1(arguments)
+
+    if arguments['--pass2Trigger']:
+        performPass2(arguments)
+
+    if arguments['--fileDict']:
+        createFileDictionary(arguments)
 
 
 ######################## Waba Luba Dub Dub!! ###########################
