@@ -21,8 +21,7 @@ def testCreateDirectoryIfNotExist(directory):
 
 def macroGenerator(percentage,isotope,location,runs,events):
 
-    covPCT ={'10pct':0.1,'15pct':0.15,'20pct':0.2,\
-    '25pct':0.25,'30pct':0.30,'35pct':0.35,'40pct':0.40}
+    covPCT ={'20pct':0.2,'25pct':0.25,'30pct':0.30}
     additionalString,additionalCommands,additionalMacStr,additionalMacOpt = testEnabledCondition(arguments)
 
     #Part of the macro that is the same for all jobs
@@ -192,16 +191,6 @@ def jobString(percentage,j,runs,models,arguments):
 
         line1 = """#!/bin/sh
 
-#MSUB -N WM_%s_%s_%d_%s    #name of job
-#MSUB -A adg         # sets bank account
-#MSUB -l nodes=1:ppn=1,walltime=23:59:59,partition=borax  # uses 1 node
-#MSUB -q pbatch         #pool
-#MSUB -o %s/log_case%s%s/wmpc_%s_%s_%d.log
-#MSUB -e %s/log_case%s%s/wmpc_%s_%s_%d.err
-#MSUB -d %s  # directory to run from
-#MSUB -V
-#MSUB                     # no more psub commands
-
 source %s/bin/thisroot.sh
 source /usr/local/gcc49/setup.sh
 source /usr/local/geant4/setup.sh 10.3
@@ -210,11 +199,7 @@ source %s/env.sh
 source %s/env_wm.sh
 export G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION=1
 export SHEFFIELD=1\n
-""" %(percentage,location,runs,additionalMacStr,\
-directory,case,additionalMacStr,percentage,location,runs,\
-directory,case,additionalMacStr,percentage,location,runs,\
-directory,\
-rootDir,g4Dir,ratDir,watchmakersDir)
+""" %(rootDir,g4Dir,ratDir,watchmakersDir)
 
     else:
         line1 = """#!/bin/sh
@@ -247,16 +232,28 @@ rootDir,g4Dir,g4Dir,ratDir,watchmakersDir)
             _log = "log_case%s%s/%s/%s/rat.%s_%s_%s_%d.log" %(case,additionalMacStr,mods,percentage,percentage,mods,location,runs)
             _mac = "%s/macro%s/%s/%s/run%s_%s_%d.mac" %(directory,additionalMacStr,mods,percentage,mods,location,runs)
             line1 += "%s -l %s %s\n" %(software,_log,_mac)
-        if case >= 3:
-            fileN = "root_files%s/%s/%s/watchman_%s_%s_%s_%d.root" %(additionalString,mods,percentage,mods,percentage,location,runs)
-            if additionalString != "":
+           
+	    if case >= 3:
+	        fileN = "root_files%s/%s/%s/watchman_%s_%s_%s_%d.root" %(additionalString,mods,percentage,mods,percentage,location,runs)
+		if additionalString != "":
+                    fileNO = "ntuple_root_files%s/%s/%s/watchman_%s_%s_%s%s_%d.root" %(additionalString,mods,percentage,mods,percentage,location,additionalString,runs)
+                    if sheffield:
+                        line1 += "root -b -l -q %s/watchmakers/\'goldenFileExtractor.C(\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\'\n" %(watchmakersDir,fileN,fileNO,minNHIT,goodness,dirGoodness,timemask,\
+                                    rate,distancemask,fidR,fidZ,pmtR,pmtZ,tankR,tankZ)
+                    ###int goldenFileExtractor(const char *file, const char *outfile = "null", double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1, double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0, double fidBoundR = 5.42, double fidBoundZ = 5.42, double pmtBoundR = 6.42, double pmtBoundZ = 6.42, double tankBoundR = 8.02635, double tankBoundZ = 8.02635 ) {
+                    else:
+                        line1 += "watch -n %s -f %s --ntupleout %s\n" %(additionalCommands,fileN,fileNO)
+	elif case == 3:
+            fileN = "root_files_pmtModel_r11780_hqe_tankRadius_10000.000000_halfHeight_10000.000000_fidThickness_1800.000000/%s/%s/watchman_%s_%s_%s_%d.root" %(mods,percentage,mods,percentage,location,runs)
+   	    if additionalString != "":
                 fileNO = "ntuple_root_files%s/%s/%s/watchman_%s_%s_%s%s_%d.root" %(additionalString,mods,percentage,mods,percentage,location,additionalString,runs)
                 if sheffield:
-                    line1 += "root -b -l -q %s/watchmakers/\'goldenFileExtractor.C(\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\'\n" %(watchmakersDir,fileN,fileNO,minNHIT,goodness,dirGoodness,timemask,\
+		    line1 += "root -b -l -q %s/watchmakers/\'goldenFileExtractor.C(\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)\'\n" %(watchmakersDir,fileN,fileNO,minNHIT,goodness,dirGoodness,timemask,\
                                     rate,distancemask,fidR,fidZ,pmtR,pmtZ,tankR,tankZ)
                     ###int goldenFileExtractor(const char *file, const char *outfile = "null", double nhit_min =3., double goodness_min = 0.1, double goodness_dir = 0.1, double timeWindow_ns = 100000, double rate = 10.0, double maxDistance = 2.0, double fidBoundR = 5.42, double fidBoundZ = 5.42, double pmtBoundR = 6.42, double pmtBoundZ = 6.42, double tankBoundR = 8.02635, double tankBoundZ = 8.02635 ) {
                 else:
                     line1 += "watch -n %s -f %s --ntupleout %s\n" %(additionalCommands,fileN,fileNO)
+   
     return line1,case
 
 
@@ -323,9 +320,9 @@ def generateJobs(N,arguments):
     directory = 'log_case%s%s'%(case,additionalMacStr)
     if not os.path.exists(directory):
         os.makedirs(directory)
-    else:
-        rmtree(directory)
-        os.makedirs(directory)
+#    else:
+#        rmtree(directory)
+#        os.makedirs(directory)
 
     for j in range(len(iso)):
         for ii in d["%s"%(iso[int(j)])]:
@@ -347,6 +344,7 @@ def generateJobs(N,arguments):
                 directory = "log_case%s%s/%s/%s" %(case,additionalMacStr,ii,cover)
                 if not os.path.exists(directory):
                     os.makedirs(directory)
+		
 
     '''Make sure that the softlink are correct for Bonsai input'''
 
@@ -368,13 +366,13 @@ def generateJobs(N,arguments):
 
     for j in range(len(iso)):
         for idx,cover in enumerate(coverage):
-            models  = d["%s" %(iso[j])]
-            for index in range(N):
+	    models  = d["%s" %(iso[j])]
+	    for index in range(N):
                 line,case = jobString(cover,j,index,models,arguments)
                 stringFile = "%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh" %(job,loc[j],cover,cover,\
                                                             "%s"%(iso[int(j)]),loc[j],index,case)
 		if sheffield:
-                    job_list+= 'condor_qsub -l nodes=1:ppn=1 ' + stringFile + '\n'
+		    job_list+= 'condor_qsub ' + stringFile + '\n'
                     outfile = open(stringFile,"wb")
                     outfile.writelines(line)
                 else:
@@ -387,8 +385,8 @@ def generateJobs(N,arguments):
                         stringFile1 = "(msub %s/%s/%s/jobs%s_%s_%s_%d_case%d.sh || ./%s/%s/%s/jobs%s_%s_%s_%d_case%d.sh)" %(job,loc[j],cover,cover,\
                                                                                                  "%s"%(iso[int(j)]),loc[j],index+1,case,job,loc[j],cover,cover,\
                                                                                                  "%s"%(iso[int(j)]),loc[j],index+1,case)
-                    outfile.writelines(stringFile1)
-                outfile.close
+                        outfile.writelines(stringFile1)
+		outfile.close
                 os.chmod(stringFile,S_IRWXU)
 
 
@@ -545,19 +543,20 @@ def testEnabledCondition(arguments):
 
     if float(arguments['--fidThick'])!= defaultValues[baseValue+11]:
         additionalString += "_fidThickness_%f" %(float(arguments['--fidThick']))
+	additionalMacStr += "_fidThickness_%f" %(float(arguments['--fidThick']))
         additionalCommands +=" --fidThick %f" %(float(arguments['--fidThick']))
 
-    if float(arguments['--U238_PPM'])!= defaultValues[baseValue+15]:
-        additionalString += "_U238_PPM_%f" %(float(arguments['--U238_PPM']))
-        additionalCommands +=" --U238_PPM %f" %(float(arguments['--U238_PPM']))
+#    if float(arguments['--U238_PPM'])!= defaultValues[baseValue+15]:
+#        additionalString += "_U238_PPM_%f" %(float(arguments['--U238_PPM']))
+#        additionalCommands +=" --U238_PPM %f" %(float(arguments['--U238_PPM']))
 
-    if float(arguments['--Th232_PPM'])!= defaultValues[baseValue+16]:
-        additionalString += "_Th232_PPM_%f" %(float(arguments['--Th232_PPM']))
-        additionalCommands +=" --Th232_PPM %f" %(float(arguments['--Th232_PPM']))
+ #   if float(arguments['--Th232_PPM'])!= defaultValues[baseValue+16]:
+ #       additionalString += "_Th232_PPM_%f" %(float(arguments['--Th232_PPM']))
+ #       additionalCommands +=" --Th232_PPM %f" %(float(arguments['--Th232_PPM']))
 
-    if float(arguments['--Rn222'])!= defaultValues[baseValue+17]:
-        additionalString += "_Rn222_%f" %(float(arguments['--Rn222']))
-        additionalCommands +=" --Rn222 %f" %(float(arguments['--Rn222']))
+  #  if float(arguments['--Rn222'])!= defaultValues[baseValue+17]:
+  #      additionalString += "_Rn222_%f" %(float(arguments['--Rn222']))
+  #      additionalCommands +=" --Rn222 %f" %(float(arguments['--Rn222']))
 
 
     if int(arguments['--supernovaFormat']):
