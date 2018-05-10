@@ -518,22 +518,22 @@ def extractHistogramWitCorrectRate():
     g["n9PerMeV_imb"].Write()
 
     rawTotalRateEISI = {}
-    rawTotalRateEISI["10pct"] = 0.0
-    rawTotalRateEISI["15pct"] = 0.0
+#    rawTotalRateEISI["10pct"] = 0.0
+#    rawTotalRateEISI["15pct"] = 0.0
     rawTotalRateEISI["20pct"] = 0.0
     rawTotalRateEISI["25pct"] = 0.0
     rawTotalRateEISI["30pct"] = 0.0
-    rawTotalRateEISI["35pct"] = 0.0
-    rawTotalRateEISI["40pct"] = 0.0
+#    rawTotalRateEISI["35pct"] = 0.0
+#    rawTotalRateEISI["40pct"] = 0.0
 
     rawTotalRateTot = {}
-    rawTotalRateTot["10pct"] = 0.0
-    rawTotalRateTot["15pct"] = 0.0
+#    rawTotalRateTot["10pct"] = 0.0
+#    rawTotalRateTot["15pct"] = 0.0
     rawTotalRateTot["20pct"] = 0.0
     rawTotalRateTot["25pct"] = 0.0
     rawTotalRateTot["30pct"] = 0.0
-    rawTotalRateTot["35pct"] = 0.0
-    rawTotalRateTot["40pct"] = 0.0
+#    rawTotalRateTot["35pct"] = 0.0
+#    rawTotalRateTot["40pct"] = 0.0
 
 
     for j in range(len(iso)):
@@ -828,7 +828,7 @@ def extractHistogramWitCorrectRate():
                     h[s_dl1b].Write()
                     h[s_dl2].Write()
                     h[s_dl2b].Write()
-                    if cover == '40pct':
+                    if cover == '30pct':
                         g["si_%s_%s_1_abs" %(ii,locj)].Write()
                         g["ei_%s_%s_1_abs" %(ii,locj)].Write()
                         g["so_%s_%s_1_abs" %(ii,locj)].Write()
@@ -874,9 +874,9 @@ def logx_logy_array(nbins = 500,xmin = 1e-2,xmax = 30.,ymin = 1e-9,ymax = 1e3):
 
 def obtainAbsoluteEfficiency(f,timeScale='day',cut = 10.0):
 
-    covPCT      = {'9.86037':1432., '14.887':2162.,'19.4453':2824.,'24.994':3558.,'28.8925':4196.,'34.3254':4985.,'39.1385':5684.}
-    pct         = npa([9.86037,14.887,19.4453,24.994,28.8925,34.3254,39.1385])
-    pctVal      = ['10pct','15pct','20pct','25pct','30pct','35pct','40pct']
+#   covPCT      = {'9.86037':1432., '14.887':2162.,'19.4453':2824.,'24.994':3558.,'28.8925':4196.,'34.3254':4985.,'39.1385':5684.}
+#   pct         = npa([9.86037,14.887,19.4453,24.994,28.8925,34.3254,39.1385])
+    pctVal      = ['20pct','25pct','30pct']
 
     f           = TFile(f,'read')
     EG          = {}

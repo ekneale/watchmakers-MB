@@ -5,6 +5,7 @@ from watchmakers.io_operations import *
 from watchmakers.analysis import *
 from watchmakers.sensitivity import *
 from watchmakers.data import *
+from watchmakers.analysis_pmt import *
 
 ######################## Start of main function ###########################
 
@@ -40,6 +41,24 @@ if __name__ == "__main__":
 
     if  arguments["--efficiency"]:
         extractHistogramWitCorrectRate()
+
+    if arguments['--pmtanalysis']:
+	extractPMTHistograms()
+
+    if arguments['--pmtanalysis2']:
+	extractPMTSinglesHistograms()
+
+    if arguments['--pmtanalysis3']:
+	extractIBDHistograms()
+
+    if arguments['--pmtanalysis4']:
+	extractPMTn9Histograms()
+	
+    if arguments['--pmtanalysis5']:
+	extractPMTSinglesFidCutHistograms()
+
+    if arguments['--pmtanalysis6']:
+	extractPMTAccidentalsFidCutHistograms()
 
     if arguments['--sensitivity']:
         sensitivityMapNew()

@@ -103,7 +103,7 @@ def siteCanvas(Graphs,site,cut,hist):
     scale       += [1.,1.,1.,1.,1.,1.,1.,1.]
 
 
-    for PC in range(10,41):
+    for PC in range(20,31):
         S = 0.
         B = Graphs['all_cut_accidental'].Eval(PC)
 
@@ -321,7 +321,7 @@ def sensitivityMapNew():
     _graphSIZE.SetTitle('3-month discovery of 40 MWth at 25 km')
 
     graphDict = {}
-    for pcVal in range(10,41,5):
+    for pcVal in range(20,31,5):
         graphDict["%dpct"%(pcVal)] = Graph()
         graphDict["%dpct"%(pcVal)].SetLineColor(4)
         graphDict["%dpct"%(pcVal)].SetName('_graph%dpct'%(pcVal))
@@ -352,7 +352,7 @@ def sensitivityMapNew():
     minY    =   0
 
     gCnt = 0
-    for PC in drange(10.,41.,5.0):
+    for PC in drange(20.,31.,5.0):
         #        print 'processing photocoverage ',PC,'% :',
         S_tmp           = 0.
         B_tmp           = 0.0

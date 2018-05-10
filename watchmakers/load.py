@@ -94,6 +94,13 @@ docstring = """
     -R                  Read analyzed result and evaluate sensitivity
     --sensitivity       Read analyzed results and evaluate sensitivity
 
+    --pmtanalysis       Analyse PMT accidental and IBD rates (as a function of fiducial cut and n9 cut)    
+    --pmtanalysis2      Analyse PMT singles (as a function of r)
+    --pmtanalysis3      Analyse IBDs as a function of fiducial cut and n9 cut
+    --pmtanalysis4	Analyse PMT accidentals and IBDs as a function of n9 cut
+    --pmtanalysis5      Analyse PMT singles as a function of fiducial cut
+    --pmtanalysis6      Analyse PMT accidentals as a function of fiducial cut
+
     --timeScale=<_ts>   Integration period (sec,day,month,year) [Default: %s]
     --site=<_site>      Site of the experiment (boulby,fairport) [Default: %s]
     --OnOff=<_OOratio>  Ratio of reactor on to reactor off [Default: %d]
@@ -177,10 +184,10 @@ def loadSimulationParameters():
     'FN','N','IBD']
     loc = ['PMT','PMT','FV','RN','S','FN','N','I']
     #Photocoverage selected
-    coverage = ['10pct','15pct','20pct','25pct','30pct','35pct','40pct']
-    coveragePCT = {'10pct':9.86037,'15pct':14.887,'20pct':19.4453,\
-    '25pct':24.994,'30pct':28.8925,'35pct':34.3254,'40pct':39.1385}
-
+#    coverage = ['20pct','25pct','30pct']
+#    coveragePCT = {'20pct':19.4453,'25pct':24.994,'30pct':28.8925}
+    coverage = ['25pct','30pct']
+    coveragePCT = {'25pct':24.994,'30pct':28.8925}
     return d, iso,loc,coverage,coveragePCT
 
 def loadPMTInfo():
@@ -188,14 +195,16 @@ def loadPMTInfo():
     from io_operations import testEnabledCondition
     conditions = testEnabledCondition(arguments)
     cond = conditions[2]
-    cmd = ["""grep 'generated PMTs' log_case*%s/boulby/**pct/rat.**pct_boulby_S_0.log"""%(cond)]
+    cmd = ["""grep 'generated PMTs' log_case4_tankRadius_10000.000000_halfHeight_10000.000000_fidThickness_1800.000000/boulby/**pct/rat.**pct_boulby_S_0.log"""] #10" PMT
+#    cmd = ["""grep 'generated PMTs' log_case4_pmtModel_r11780_hqe_tankRadius_10000.000000_halfHeight_10000.000000_fidThickness_1800.000000/boulby/**pct/rat.**pct_boulby_S_0.log"""] #12" PMT
     a =  subprocess.check_output(cmd,shell=True)
     b = a.splitlines()
     c = []
     for _b in b:
         c.append(float(_b.split()[3]))
 
-    cmd = ["""grep 'actual photocathode coverage' log_case*%s/boulby/**pct/rat.**pct_boulby_S_0.log"""%(cond)]
+    cmd = ["""grep 'actual photocathode coverage' log_case4_tankRadius_10000.000000_halfHeight_10000.000000_fidThickness_1800.000000/boulby/**pct/rat.**pct_boulby_S_0.log"""] # 10" PMT
+#    cmd = ["""grep 'actual photocathode coverage' log_case4_pmtModel_r11780_hqe_tankRadius_10000.000000_halfHeight_10000.000000_fidThickness_1800.000000/boulby/**pct/rat.**pct_boulby_S_0.log"""] # 12" PMT
     a =  subprocess.check_output(cmd,shell=True)
     b = a.splitlines()
     d = []
@@ -227,7 +236,8 @@ def loadAnalysisParameters(timeScale='day'):
         timeS   = 365.0*24.0*3600.
 
     #PMT mass in kilograms
-    mass = 1.4 # from Hamamatsu tech details
+    mass = 1.4 # 10" PMT from Hamamatsu tech details
+#    mass = 2. # 12" PMT
 
 
 
@@ -518,19 +528,13 @@ def loadAnalysisParameters(timeScale='day'):
         dAct["%s_%s%s"%(ele,_loca[index],_site[index])] = arr[index]*timeS
 
 
-    coveNumber    = {'10pct':pmt[0][0],   '15pct':pmt[0][1], '20pct':pmt[0][2],  \
-    '25pct':pmt[0][3],  '30pct':pmt[0][4], '35pct':pmt[0][5],  '40pct':pmt[0][6]}
-    covePCT       = {'10pct':pmt[1][0], '15pct':pmt[1][1],'20pct':pmt[1][2],\
-    '25pct':pmt[1][3],'30pct':pmt[1][4],'35pct':pmt[1][5],'40pct':pmt[1][6]}
+    coveNumber    = {'20pct':pmt[0][0],   '25pct':pmt[0][1], '30pct':pmt[0][2]}
+    covePCT       = {'20pct':pmt[1][0], '25pct':pmt[1][1],'30pct':pmt[1][2]}
 
     pctTubes   = {"%s"%(pmt[1][0]):pmt[0][0],"%s"%(pmt[1][1]):pmt[0][1],\
-    "%s"%(pmt[1][2]):pmt[0][2],"%s"%(pmt[1][3]):pmt[0][3],\
-    "%s"%(pmt[1][4]):pmt[0][4],"%s"%(pmt[1][5]):pmt[0][5],\
-    "%s"%(pmt[1][6]):pmt[0][6]}
+    "%s"%(pmt[1][2]):pmt[0][2]}
 
-    pct = npa([ float(pmt[1][0]),float(pmt[1][1]),float(pmt[1][2]),\
-    float(pmt[1][3]),float(pmt[1][4]),float(pmt[1][5]),\
-    float(pmt[1][6]) ])
+    pct = npa([ float(pmt[1][0]),float(pmt[1][1]),float(pmt[1][2])])
 
 
     return inta,proc,loca,acc,arr,Activity,br,site,timeS,\
