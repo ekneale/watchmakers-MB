@@ -319,9 +319,9 @@ def loadAnalysisParameters(timeScale='day'):
     #Fast neutrons conversion
     #Rock mass
     # Original Estimate
-    # volumeR         = (2.*22.5*23.8*1.0+2.*17*23.8*1.0+2.*22.5*17.*1.0)
-    volumeR         = power(2*float(arguments["--tankRadius"])+6,2)*(2*float(arguments["--halfHeight"])+6) - power(2*float(arguments["--tankRadius"])+4,2)*(2*float(arguments["--halfHeight"])+4) # Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
-    volumeR         = power(22.,3)-power(20.,3)# Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
+   # volumeR         = (2.*22.5*23.8*1.0+2.*17*23.8*1.0+2.*22.5*17.*1.0)
+    volumeR         = pi*pow(14,2)*28) - pi*pow(13,2)*25.5) # 'tube'-shaped rock layer surrounding cavern: 1m thick, 1.5m thick on top
+#    volumeR         = power(22.,3)-power(20.,3)# Rock cavern e.g. (22m x 22m x 22m) - (20m x 20m x 20m)
     density         = 2.39 #from McGrath
     rockMass        = volumeR*power(100.,3)*density
 
@@ -664,12 +664,12 @@ def loadPMTActivity():
 def loadTankActivity():                                         ##added by Leah: activity from steel in tank
     ##MASS OF STEEL USED IN KG -- assuming use of steel grade 304
     density = 8000                                              ##kg/m^3
-    r1 = (float(arguments["--tankRadius"]))/1000                ##outer radius inc steel thick in m
-    h1 = 2 * (float(arguments["--halfHeight"]))/1000            ##outer height inc steel thick in m
+    r1 = (float(arguments["--tankRadius"]))/1000.               ##outer radius inc steel thick in m
+    h1 = 2 * (float(arguments["--halfHeight"]))/1000.           ##outer height inc steel thick in m
     V1 = pi * h1 * r1**2                                        ##outer volume inc steel thick in m^3
 
-    r2 = r1 - ((float(arguments["--steelThick"]))/1000)         ##inner radius in m
-    h2 = h1 - 2*((float(arguments["--steelThick"]))/1000)       ##inner height in m
+    r2 = r1 - ((float(arguments["--steelThick"]))/1000.         ##inner radius in m
+    h2 = h1 - 2*((float(arguments["--steelThick"]))/1000.       ##inner height in m
     V2 = pi * h2 * r2**2                                        ##inner volume in m^3
 
     tankvol = V1 - V2                                           ##hollow cylinder m^3
@@ -692,8 +692,9 @@ def loadTankActivity():                                         ##added by Leah:
 def loadConcreteActivity():                                     ##added by Leah: activity from concrete
     ##MASS OF CONCRETE USED IN KG -- assuming normal-weight concrete (NWC)
     density = 2300                                              ##kg/m^3
-    thickness = 0.3                                             ## slab thickness in metres - alter for desired value
-    concvol = 25*25*thickness                                   ##assuming a 25x25 m^2 cavern
+    thickness = 0.5                                             ## slab thickness in metres - alter for desired value
+    concvol = 25.5*(pi*pow(13.,2)-pi*pow(12.5,2)) + 0.5*pi*(pow(13.,2)) #0.5m thick, 25m high concrete 'tube': outer diameter 26m, 
+									#inner diameter 25m, plus 0.5m base (updated by L.Kneale)
     concmass = concvol * density
 
     print "Total concrete slab mass",concmass,"kg"
@@ -764,15 +765,16 @@ def loadRockActivity():
     ##MASS OF SALT IN WALL IN KG -- assuming pure rock salt walls (Overview of the European Underground Facilities paper)
     density = 2165                                              ##kg/m^3 -- approx from "Physical Properties Data for Rock Salt"
     thickness = 5                                               ##thickness in metres
-    r1 = 25 + thickness                                         ##outer radius in m
-    h1 = 25 + 2*thickness                                       ##outer height in m
+    r1 = 13 + thickness                                         ##outer radius in m
+    h1 = 25.5 + 2*thickness                                     ##outer height in m
     V1 = pi * h1 * r1**2                                        ##outer volume in m^3
 
-    r2 = 25                                                     ##inner radius in m
-    h2 = 25                                                     ##inner height in m
+    r2 = 13                                                     ##inner radius in m
+    h2 = 25.5                                                   ##inner height in m
     V2 = pi * h2 * r2**2                                        ##inner volume in m^3
 
-    rockvol = V1 - V2                                           ##hollow cylinder m^3
+    rockvol = V1 - V2                                           ##hollow cylinder m^3 outside 25m cylindrical cavern 
+								##plus 0.5m concrete layer on walls and floor 
     rockmass = rockvol*density
 
     print "Total relevant rock mass",rockmass,"kg"
@@ -805,9 +807,9 @@ def loadGdActivity():
 
     d,process,coverage = loadSimulationParamatersNew()
 
-    GdU238    = float(arguments["--U238_Gd"]) * 1000 * nKiloTons *1e6 * 0.002 # bq/kg * kg of water * Gd(SO4)3 concentration
-    GdTh232   = float(arguments["--Th232_Gd"])*1000 * nKiloTons * 1e6 * 0.002 # bq/kg * kg of water * Gd(SO4)3 concentration
-    GdU235    = float(arguments["--U235_Gd"]) * 1000 * nKiloTons * 1e6 * 0.002 #bq/kg * kg of water * Gd(SO4)3 concentration
+    GdU238    = float(arguments["--U238_Gd"]) / 1000. * nKiloTons * 1e6 * 0.002 # bq/kg * kg of water * Gd(SO4)3 concentration
+    GdTh232   = float(arguments["--Th232_Gd"])/ 1000. * nKiloTons * 1e6 * 0.002 # bq/kg * kg of water * Gd(SO4)3 concentration
+    GdU235    = float(arguments["--U235_Gd"]) / 1000. * nKiloTons * 1e6 * 0.002  #bq/kg * kg of water * Gd(SO4)3 concentration
 
 
     return GdU238,GdTh232,GdU235
