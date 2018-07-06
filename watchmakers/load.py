@@ -668,8 +668,8 @@ def loadTankActivity():                                         ##added by Leah:
     h1 = 2 * (float(arguments["--halfHeight"]))/1000.           ##outer height inc steel thick in m
     V1 = pi * h1 * r1**2                                        ##outer volume inc steel thick in m^3
 
-    r2 = r1 - ((float(arguments["--steelThick"]))/1000.         ##inner radius in m
-    h2 = h1 - 2*((float(arguments["--steelThick"]))/1000.       ##inner height in m
+    r2 = r1 - (float(arguments["--steelThick"]))/1000.         ##inner radius in m
+    h2 = h1 - 2*(float(arguments["--steelThick"]))/1000.       ##inner height in m
     V2 = pi * h2 * r2**2                                        ##inner volume in m^3
 
     tankvol = V1 - V2                                           ##hollow cylinder m^3
@@ -694,7 +694,7 @@ def loadConcreteActivity():                                     ##added by Leah:
     density = 2300                                              ##kg/m^3
     thickness = 0.5                                             ## slab thickness in metres - alter for desired value
     concvol = 25.5*(pi*pow(13.,2)-pi*pow(12.5,2)) + 0.5*pi*(pow(13.,2)) #0.5m thick, 25m high concrete 'tube': outer diameter 26m, 
-									#inner diameter 25m, plus 0.5m base (updated by L.Kneale)
+									#inner diameter 25m, plus 0.5m base of diameter 26m
     concmass = concvol * density
 
     print "Total concrete slab mass",concmass,"kg"
@@ -756,7 +756,7 @@ def loadShotcreteActivity():
     print "40K in shotcrete coating:\n ppm:", ppm_40k,"\n total activity:",act_40k,"Bq"
 
     return shotmass,act_238u,act_232th,act_40k
-### mineguard flag??
+
 
 
 def loadRockActivity():
